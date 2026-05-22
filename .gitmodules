@@ -1,0 +1,4 @@
+[submodule "goclaw"]
+	path = goclaw
+	url = https://github.com/keithy/goclaw.git
+	branch = main
