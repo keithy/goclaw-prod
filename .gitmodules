@@ -8,3 +8,6 @@
 [submodule "sensible"]
 	path = sensible
 	url = https://github.com/keithy/sensible.git
+[submodule "picoclaw"]
+	path = picoclaw
+	url = https://github.com/keithy/picoclaw.git
