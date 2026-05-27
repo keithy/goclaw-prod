@@ -23,7 +23,8 @@ goclaw/picoclaw       →     sensible-server → execlineb scripts
 
 ## Architecture
 
-- **goclaw-build/** — builds versioned binaries to `RELEASES/goclaw/{amd64,arm64}/{version}/`
+- **use/goclaw/** — builds versioned binaries to `RELEASES/goclaw/{amd64,arm64}/{version}/`
+- **use/picoclaw/** — builds picoclaw binaries
 - **compose.yml** — skeleton Alpine container, binary mounted in
 - **+binary.yml** — compose override for volume-mounting local binaries
 - **+dockerfile.yml** — compose override for Dockerfile-based builds
@@ -34,7 +35,7 @@ goclaw/picoclaw       →     sensible-server → execlineb scripts
 
 ```bash
 # Build binary for current arch
-cd goclaw-build && make build
+cd use/goclaw && make build
 ```
 
 ## Environment Variables
@@ -49,7 +50,8 @@ cd goclaw-build && make build
 
 ```
 podclaws/
-├── goclaw-build/        # Binary builder
+├── use/goclaw/          # GoClaw binary builder
+├── use/picoclaw/        # PicoClaw binary builder
 ├── goclaw/              # GoClaw submodule (nextlevelbuilder/goclaw)
 ├── sensible/            # Sensible host execution bridge
 ├── self-buildah-orig/   # Self-building container reference
