@@ -1,10 +1,10 @@
 # Podclaws
 
-Agent launcher for rootless Podman — runs GoClaw, PicoClaw, and other AI agents as rootless containers with sensible host communication.
+Agent launcher for rootless Podman — runs GoClaw, PicoClaw, and other AI agents as rootless containers with `sensible` to-host communication.
 
 ## What It Does
 
-Podclaws orchestrates multiple AI agents under rootless Podman. Each agent runs in an isolated Alpine container with a volume-mounted binary (no rebuild needed to update). The container communicates with the host via **sensible** — execlineb scripts that prevent shell injection and restrict AI actions to explicit allowlists.
+Podclaws orchestrates multiple AI agents under rootless Podman. Each agent typically runs in an isolated Alpine container with a volume-mounted binary (no rebuild needed to update). The container may communicates with the host to use services via **sensible** a hardened exec tool.
 
 ```
 Container (alpine)          Host
@@ -35,12 +35,6 @@ goclaw/picoclaw       →     sensible-server → execlineb scripts
 ```bash
 # Build binary for current arch
 cd goclaw-build && make build
-
-# Launch with volume-mounted binary
-podman compose -f goclaw-build/compose.yml -f goclaw-build/+binary.yml up -d
-
-# Or build from Dockerfile
-podman compose -f goclaw-build/compose.yml -f goclaw-build/+dockerfile.yml up -d
 ```
 
 ## Environment Variables

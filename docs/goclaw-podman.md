@@ -1,6 +1,10 @@
 # Using Podman with GoClaw
 
-GoClaw supports Docker Compose. Podclaws runs GoClaw under Rootless Podman.
+Podclaws is intended as a production ready environment that supports multiple agent implementations.
+Rootless Podman, is the deployment runtime supported, but the architecture is flexible.
+
+GoClaw supports Docker Compose out of the box, the 'Podclaws' project explicitly decouples `goclaw`
+executable development from the deployment environment.
 
 This is achieved via some environment variables and additional config files.
 This guide covers Podman-specific setup.
@@ -16,16 +20,15 @@ This guide covers Podman-specific setup.
 
 ## Setup
 
-### 1. Enable Podman Environment
+### 1. Enable Rootless Podman Environment
 
 ```bash
-mise run podman-enable
+/code/podclaws/podman/setup-rootless.sh
 ```
 
-This:
-- Moves `mise.podman.toml` → `./mise.podman.toml` (activates podman env)
+- Uses environment modifier `./mise/config.podman.toml` 
 - Moves `miserc.toml` → `./.miserc.toml` (sets `MISE_ENV = "podman"`)
-- Creates symlinks in `~/.config/containers/` for podman config files (batteries included defaults)
+- Copied rootless podman config files to `~/.config/containers/` 
 
 #### Batteries Included Defaults (ZFS friendly)
 
@@ -34,7 +37,7 @@ Podman volume_path = `/srv` (why not?)
 Assuming that a ZFS user will have separately mapped `/home/<user>`  directories into
 a ZFS volume by default, placing our data volumes at `/srv/` simplifies the task
 of mapping them individually to their own ZFS volumes. The goal being to map the
-entirity of goclaw data into a single heirarchy of volumes, so that a backup 
+entireity of goclaw data into a single heirarchy of volumes, so that a backup 
 volume snapshot becomes a single atomic operation.
 
 In contrast placing podman storage at `/opt/storage` is intended to have the opposite
@@ -44,8 +47,8 @@ as / (i.e. f2fs, ext4, or xfs)
 
 #### Mise config
 
-The mise config (`mise.podman.toml`) sets up:
-- `DOCKER_CMD=podman` - makes tasks use podman instead of docker
+The mise config (`config.podman.toml`) sets up:
+- `DOCKER_CMD=podman` - tasks use podman instead of docker
 - `docker = "podman"` alias - shell compatibility so `docker` commands work
 - `BUILDAH_FORMAT=docker` for healthcheck support
 
@@ -80,7 +83,8 @@ If your UID isn't mapped, you'll get permission errors.
 ### 3. Run with Podman Compose
 
 ```bash
-podman compose -f docker-compose.yml -f docker-compose.postgres.yml up
+/code/podclaws/prepare-compose.sh --generate
+/code/podclaws/prepare-compose.sh --edit
 ```
 
 ## Environment Variables
@@ -109,9 +113,3 @@ Your UID is not in `/etc/subuid`. Fix:
 sudo usermod -v $(id -u)-$(($(id -u)+10000)) $(whoami)
 ```
 
-### Socket permission denied
-
-Check socket exists and permissions:
-```bash
-ls -la /run/user/$UID/podman/podman.sock
-```
