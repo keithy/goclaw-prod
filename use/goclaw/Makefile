@@ -6,8 +6,8 @@
 #   make build-all         Build both amd64 + arm64, update latest symlinks
 #   make clean             Remove RELEASES/goclaw/
 #
-# Run from goclaw-build/ directory:
-#   cd goclaw-build && make build
+# Run from use/goclaw/ directory:
+#   cd use/goclaw && make build
 #
 # Version is derived from the goclaw submodule git tag:
 #   cd ../goclaw && git describe --tags --abbrev=0 --match "v[0-9]*"
@@ -24,7 +24,8 @@
 
 SHELL := /bin/bash
 GOCLAW_DIR := $(abspath $(CURDIR)/../goclaw)
-RELEASES_DIR := $(abspath $(CURDIR)/../RELEASES/goclaw)
+PODCLAWS_RELEASES ?= $(abspath $(CURDIR)/../RELEASES)
+RELEASES_DIR := $(PODCLAWS_RELEASES)/goclaw
 
 VERSION := $(shell cd $(GOCLAW_DIR) && git describe --tags --abbrev=0 --match "v[0-9]*" 2>/dev/null || echo dev)
 LDFLAGS := -s -w -X github.com/nextlevelbuilder/goclaw/cmd.Version=$(VERSION)

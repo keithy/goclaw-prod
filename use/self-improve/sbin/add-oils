@@ -1,0 +1,9 @@
+#!/bin/sh
+# add-oils: install Oil shell
+set -e
+
+apk add --no-cache curl bash
+curl -fsSL https://install.oilshell.org/release/0.24.0/install.tgz \
+  | tar -xz -C /usr/local
+ln -sf /usr/local/oils-for-unix/bin/oil /usr/local/bin/oil || true
+ln -sf /usr/local/oils-for-unix/bin/osh /usr/local/bin/osh || true

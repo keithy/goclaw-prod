@@ -1,6 +1,6 @@
 # Docker build override — builds goclaw from source instead of pulling an image.
 # Usage:
-#   docker compose -f docker-compose.yml -f goclaw-build/service.goclaw.yml -f goclaw-build/+dockerfile.yml up -d
+#   docker compose -f docker-compose.yml -f use/goclaw/service.goclaw.yml -f use/goclaw/+dockerfile.yml up -d
 
 services:
   goclaw:

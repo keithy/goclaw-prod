@@ -4,7 +4,13 @@ Agent launcher for rootless Podman — runs GoClaw, PicoClaw, and other AI agent
 
 ## What It Does
 
-Podclaws orchestrates multiple AI agents under rootless Podman. Each agent typically runs in an isolated Alpine container with a volume-mounted binary (no rebuild needed to update). The container may communicates with the host to use services via **sensible** a hardened exec tool.
+Podclaws orchestrates multiple AI agents under rootless Podman. Each agent typically runs in an isolated Alpine container with a volume-mounted binary (no rebuild needed to update). The containers may communicate with the host to use services via **sensible** a hardened exec tool.
+
+## WIP
+
+- goclaw builds, runs in podman, no host comms
+- picoclaw builds
+
 
 ```
 Container (alpine)          Host

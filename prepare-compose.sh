@@ -16,7 +16,7 @@ loud() {
 # Find all compose yml files in root dir and options/ subdirectory
 find_compose_files() {
   local dir="$1"
-  find "$dir" -maxdepth 2 -name "*.yml" 2>/dev/null | sort
+  find "$dir" -maxdepth 3 -name "*.yml" 2>/dev/null | sort
 }
 
 # Check if a file is a compose file by content

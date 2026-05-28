@@ -24,7 +24,8 @@
 
 SHELL := /bin/bash
 PICOCLAW_DIR := $(abspath $(CURDIR)/../picoclaw)
-RELEASES_DIR := $(abspath $(CURDIR)/../RELEASES/picoclaw)
+PODCLAWS_RELEASES ?= $(abspath $(CURDIR)/../RELEASES)
+RELEASES_DIR := $(PODCLAWS_RELEASES)/picoclaw
 
 VERSION := $(shell cd $(PICOCLAW_DIR) && git describe --tags --abbrev=0 2>/dev/null || echo dev)
 GIT_COMMIT := $(shell cd $(PICOCLAW_DIR) && git rev-parse --short=8 HEAD 2>/dev/null || echo dev)

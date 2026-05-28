@@ -5,6 +5,8 @@
 networks:
   net:
     driver: bridge
+  goclaw-net:
+    driver: bridge
 
 volumes:
   sensible-tasks:
