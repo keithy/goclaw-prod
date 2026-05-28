@@ -10,7 +10,7 @@
 
 services:
   goclaw:
-    command: ["/usr/local/bin/goclaw"]
+    command: ["goclaw"]
     ports:
       - "${GOCLAW_PORT:-18790}:18790"
     env_file:
