@@ -1,7 +1,0 @@
-# Local binary override — mount the locally-built goclaw binary into the alpine container.
-# Usage: docker compose -f docker-compose.yml -f use/goclaw/service.goclaw.yml -f use/goclaw/+binary.yml up -d
-
-services:
-  goclaw:
-    volumes:
-      - ${PODCLAWS_RELEASES:-../RELEASES/goclaw}/${GOCLAW_DEPLOY_VERSION}/goclaw:/bin/goclaw:ro
