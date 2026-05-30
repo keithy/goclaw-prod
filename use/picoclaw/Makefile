@@ -1,31 +1,24 @@
-# Makefile for building versioned picoclaw binaries for Alpine Linux (volume mounting)
+# Makefile for building picoclaw binary for Alpine Linux (volume mounting)
 #
-#   make build              Build current arch → RELEASES/picoclaw/$GOARCH/$VERSION/picoclaw
-#   make build-amd64       Build amd64 only
-#   make build-arm64       Build arm64 only
-#   make build-all         Build both amd64 + arm64, update latest symlinks
-#   make clean             Remove RELEASES/picoclaw/
+#   make build              Build current arch → RELEASES/picoclaw/$VERSION/picoclaw
+#   make clean              Remove RELEASES/picoclaw/
+#   make image              Build image from Dockerfile
 #
-# Run from picoclaw-build/ directory:
-#   cd picoclaw-build && make build
+# Run from use/picoclaw/ directory:
+#   cd use/picoclaw && make build
 #
 # Version is derived from the picoclaw submodule git tag:
 #   cd ../picoclaw && git describe --tags --abbrev=0
 #
-# Output structure (at podclaws/RELEASES/picoclaw/):
-#   picoclaw/amd64/
-#     v0.9.0/picoclaw       ← binary
+# Output structure (at RELEASES/picoclaw/):
+#   picoclaw/
+#     v0.9.0/picoclaw        ← binary
 #     v0.9.0/picoclaw.sha256 ← checksum
-#     latest -> v0.9.0      ← symlink
-#   picoclaw/arm64/
-#     v0.9.0/picoclaw
-#     v0.9.0/picoclaw.sha256
-#     latest -> v0.9.0
+#     latest -> v0.9.0       ← symlink
 
 SHELL := /bin/bash
-PICOCLAW_DIR := $(abspath $(CURDIR)/../picoclaw)
-PODCLAWS_RELEASES ?= $(abspath $(CURDIR)/../RELEASES)
-RELEASES_DIR := $(PODCLAWS_RELEASES)/picoclaw
+PICOCLAW_DIR := $(abspath $(CURDIR)/../../picoclaw)
+RELEASES_DIR := $(abspath $(CURDIR)/../../RELEASES/picoclaw)
 
 VERSION := $(shell cd $(PICOCLAW_DIR) && git describe --tags --abbrev=0 2>/dev/null || echo dev)
 GIT_COMMIT := $(shell cd $(PICOCLAW_DIR) && git rev-parse --short=8 HEAD 2>/dev/null || echo dev)
@@ -38,7 +31,7 @@ GOOS := linux
 GOARCH := $(shell go env GOARCH 2>/dev/null || echo amd64)
 GO := CGO_ENABLED=0 go
 
-.PHONY: build build-amd64 build-arm64 build-all clean help
+.PHONY: build clean help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -55,54 +48,24 @@ generate:
 # Build current host architecture
 # --------------------------------------------------------------------
 
-build: generate build-$(GOARCH) latest-link
+build: generate $(RELEASES_DIR)/$(VERSION)/picoclaw latest-link
 
-# --------------------------------------------------------------------
-# Build amd64
-# --------------------------------------------------------------------
-
-build-amd64: $(RELEASES_DIR)/amd64/$(VERSION)/picoclaw
-
-$(RELEASES_DIR)/amd64/$(VERSION)/picoclaw: generate
-	@mkdir -p $(RELEASES_DIR)/amd64/$(VERSION)
-	cd $(PICOCLAW_DIR) && GOOS=$(GOOS) GOARCH=amd64 $(GO) build -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/amd64/$(VERSION)/picoclaw ./cmd/picoclaw
-	@cd $(RELEASES_DIR)/amd64/$(VERSION) && sha256sum picoclaw > picoclaw.sha256
+$(RELEASES_DIR)/$(VERSION)/picoclaw: | generate
+	@mkdir -p $(RELEASES_DIR)/$(VERSION)
+	cd $(PICOCLAW_DIR) && GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/$(VERSION)/picoclaw ./cmd/picoclaw
+	@cd $(RELEASES_DIR)/$(VERSION) && sha256sum picoclaw > picoclaw.sha256
 	@echo "  VERSION  $(VERSION)"
-	@echo "  ARCH     $(GOOS)/amd64"
-	@echo "  OUTPUT   $(RELEASES_DIR)/amd64/$(VERSION)/"
-	@echo "Built: $(RELEASES_DIR)/amd64/$(VERSION)/picoclaw"
+	@echo "  ARCH     $(GOOS)/$(GOARCH)"
+	@echo "  OUTPUT   $(RELEASES_DIR)/$(VERSION)/"
+	@echo "Built: $(RELEASES_DIR)/$(VERSION)/picoclaw"
 
 # --------------------------------------------------------------------
-# Build arm64
-# --------------------------------------------------------------------
-
-build-arm64: $(RELEASES_DIR)/arm64/$(VERSION)/picoclaw
-
-$(RELEASES_DIR)/arm64/$(VERSION)/picoclaw: generate
-	@mkdir -p $(RELEASES_DIR)/arm64/$(VERSION)
-	cd $(PICOCLAW_DIR) && GOOS=$(GOOS) GOARCH=arm64 $(GO) build -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/arm64/$(VERSION)/picoclaw ./cmd/picoclaw
-	@cd $(RELEASES_DIR)/arm64/$(VERSION) && sha256sum picoclaw > picoclaw.sha256
-	@echo "  VERSION  $(VERSION)"
-	@echo "  ARCH     $(GOOS)/arm64"
-	@echo "  OUTPUT   $(RELEASES_DIR)/arm64/$(VERSION)/"
-	@echo "Built: $(RELEASES_DIR)/arm64/$(VERSION)/picoclaw"
-
-# --------------------------------------------------------------------
-# Build all architectures
-# --------------------------------------------------------------------
-
-build-all: generate build-amd64 build-arm64 latest-link
-	@echo ""
-	@echo "All architectures built:"
-	@find $(RELEASES_DIR) -type f -name "picoclaw*" | sort
-
-# --------------------------------------------------------------------
-# Symlinks: RELEASES/picoclaw/$GOARCH/latest → RELEASES/picoclaw/$GOARCH/$VERSION
+# Symlink: RELEASES/picoclaw/latest → RELEASES/picoclaw/$VERSION
 # --------------------------------------------------------------------
 
 latest-link:
-	@ln -sfn $(VERSION) $(RELEASES_DIR)/$(GOARCH)/latest
-	@echo "  $(GOARCH)/latest → $(VERSION)"
+	@ln -sfn $(VERSION) $(RELEASES_DIR)/latest
+	@echo "  latest → $(VERSION)"
 
 # --------------------------------------------------------------------
 # Cleanup

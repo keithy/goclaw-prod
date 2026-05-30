@@ -1,10 +1,9 @@
-[submodule "goclaw"]
-	path = goclaw
-	url = https://github.com/keithy/goclaw.git
-	branch = main
 [submodule "sensible"]
 	path = sensible
 	url = https://github.com/keithy/sensible.git
 [submodule "picoclaw"]
 	path = picoclaw
 	url = https://github.com/keithy/picoclaw.git
+[submodule "goclaw"]
+	path = goclaw
+	url = https://github.com/keithy/goclaw.git

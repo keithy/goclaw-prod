@@ -1,7 +1,7 @@
 ---
 name: self-improve
 description: Tool for building and managing container images from inside the container. Provides scripts for committing container state, switching between versions, and installing packages.
-metadata: {"nanobot":{"emoji":"🛠️","requires":{},"install":[]}}
+metadata: {"goclaw":{"emoji":"🛠️","requires":{},"install":[]}}
 ---
 
 # Self-Improve Skill

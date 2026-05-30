@@ -1,0 +1,48 @@
+# Upgrade service - runs database migrations and exits
+#
+# Usage:
+#   docker compose -f use/goclaw/service.upgrade.yml run --rm upgrade
+
+services:
+  upgrade:
+    image: localhost/goclaw:base
+    command: ["/bin/goclaw", "upgrade"]
+
+    env_file:
+      - path: .env
+        required: false
+
+    environment:
+      - GOCLAW_MIGRATIONS_DIR=/app/migrations
+      - GOCLAW_POSTGRES_DSN=postgres://${POSTGRES_USER:-goclaw}:${POSTGRES_PASSWORD:-goclaw}@postgres:5432/${POSTGRES_DB:-goclaw}?sslmode=disable
+      - GOCLAW_DATA_DIR=/app/data
+      - GOCLAW_CONFIG=/app/data/config.json
+      - GOCLAW_ENCRYPTION_KEY=${GOCLAW_ENCRYPTION_KEY:-}
+
+    volumes:
+      - goclaw-data:/app/data
+      - ${RELEASES_DIR:-./RELEASES}/goclaw/${GOCLAW_DEPLOY_VERSION}/goclaw:/bin/goclaw:ro
+      - ${GOCLAW_DIR:-./goclaw}/migrations:/app/migrations:ro
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETUID
+      - SETGID
+      - CHOWN
+      - CAP_DAC_OVERRIDE
+
+    restart: "no"
+
+volumes:
+  goclaw-data:

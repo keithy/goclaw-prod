@@ -1,10 +1,8 @@
-# Makefile for building versioned goclaw binaries for Alpine Linux (volume mounting)
+# Makefile for building goclaw binary for Alpine Linux (volume mounting)
 #
 #   make build              Build current arch → RELEASES/goclaw/$GOARCH/$VERSION/goclaw
-#   make build-amd64       Build amd64 only
-#   make build-arm64       Build arm64 only
-#   make build-all         Build both amd64 + arm64, update latest symlinks
-#   make clean             Remove RELEASES/goclaw/
+#   make clean              Remove RELEASES/goclaw/
+#   make image              Build image from Dockerfile
 #
 # Run from use/goclaw/ directory:
 #   cd use/goclaw && make build
@@ -12,20 +10,15 @@
 # Version is derived from the goclaw submodule git tag:
 #   cd ../goclaw && git describe --tags --abbrev=0 --match "v[0-9]*"
 #
-# Output structure (at goclaw-prod/RELEASES/goclaw/):
-#   goclaw/amd64/
+# Output structure (at RELEASES/goclaw/):
+#   goclaw/
 #     v1.9.0/goclaw        ← binary
 #     v1.9.0/goclaw.sha256 ← checksum
 #     latest -> v1.9.0     ← symlink
-#   goclaw/arm64/
-#     v1.9.0/goclaw
-#     v1.9.0/goclaw.sha256
-#     latest -> v1.9.0
 
 SHELL := /bin/bash
-GOCLAW_DIR := $(abspath $(CURDIR)/../goclaw)
-PODCLAWS_RELEASES ?= $(abspath $(CURDIR)/../RELEASES)
-RELEASES_DIR := $(PODCLAWS_RELEASES)/goclaw
+GOCLAW_DIR := $(abspath $(CURDIR)/../../goclaw)
+RELEASES_DIR := $(abspath $(CURDIR)/../../RELEASES/goclaw)
 
 VERSION := $(shell cd $(GOCLAW_DIR) && git describe --tags --abbrev=0 --match "v[0-9]*" 2>/dev/null || echo dev)
 LDFLAGS := -s -w -X github.com/nextlevelbuilder/goclaw/cmd.Version=$(VERSION)
@@ -33,7 +26,7 @@ LDFLAGS := -s -w -X github.com/nextlevelbuilder/goclaw/cmd.Version=$(VERSION)
 GOOS := linux
 GOARCH := $(shell go env GOARCH 2>/dev/null || echo amd64)
 
-.PHONY: build build-amd64 build-arm64 build-all clean help
+.PHONY: build clean image help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-16s %s\n", $$1, $$2}'
@@ -42,56 +35,25 @@ help: ## Show this help
 # Build current host architecture
 # --------------------------------------------------------------------
 
-build: build-$(GOARCH) latest-link
+build: $(RELEASES_DIR)/$(VERSION)/goclaw latest-link
 
-# --------------------------------------------------------------------
-# Build amd64
-# --------------------------------------------------------------------
-
-build-amd64: $(RELEASES_DIR)/amd64/$(VERSION)/goclaw
-
-$(RELEASES_DIR)/amd64/$(VERSION)/goclaw:
-	@mkdir -p $(RELEASES_DIR)/amd64/$(VERSION)
-	cd $(GOCLAW_DIR) && CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=amd64 \
-		go build -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/amd64/$(VERSION)/goclaw .
-	@cd $(RELEASES_DIR)/amd64/$(VERSION) && sha256sum goclaw > goclaw.sha256
+$(RELEASES_DIR)/$(VERSION)/goclaw:
+	@mkdir -p $(RELEASES_DIR)/$(VERSION)
+	cd $(GOCLAW_DIR) && CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) \
+		go build -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/$(VERSION)/goclaw .
+	@cd $(RELEASES_DIR)/$(VERSION) && sha256sum goclaw > goclaw.sha256
 	@echo "  VERSION  $(VERSION)"
-	@echo "  ARCH     $(GOOS)/amd64"
-	@echo "  OUTPUT   $(RELEASES_DIR)/amd64/$(VERSION)/"
-	@echo "Built: $(RELEASES_DIR)/amd64/$(VERSION)/goclaw"
+	@echo "  ARCH     $(GOOS)/$(GOARCH)"
+	@echo "  OUTPUT   $(RELEASES_DIR)/$(VERSION)/"
+	@echo "Built: $(RELEASES_DIR)/$(VERSION)/goclaw"
 
 # --------------------------------------------------------------------
-# Build arm64
-# --------------------------------------------------------------------
-
-build-arm64: $(RELEASES_DIR)/arm64/$(VERSION)/goclaw
-
-$(RELEASES_DIR)/arm64/$(VERSION)/goclaw:
-	@mkdir -p $(RELEASES_DIR)/arm64/$(VERSION)
-	cd $(GOCLAW_DIR) && CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=arm64 \
-		go build -ldflags="$(LDFLAGS)" -o $(RELEASES_DIR)/arm64/$(VERSION)/goclaw .
-	@cd $(RELEASES_DIR)/arm64/$(VERSION) && sha256sum goclaw > goclaw.sha256
-	@echo "  VERSION  $(VERSION)"
-	@echo "  ARCH     $(GOOS)/arm64"
-	@echo "  OUTPUT   $(RELEASES_DIR)/arm64/$(VERSION)/"
-	@echo "Built: $(RELEASES_DIR)/arm64/$(VERSION)/goclaw"
-
-# --------------------------------------------------------------------
-# Build all architectures
-# --------------------------------------------------------------------
-
-build-all: build-amd64 build-arm64 latest-link
-	@echo ""
-	@echo "All architectures built:"
-	@find $(RELEASES_DIR) -type f -name "goclaw*" | sort
-
-# --------------------------------------------------------------------
-# Symlinks: RELEASES/goclaw/$GOARCH/latest → RELEASES/goclaw/$GOARCH/$VERSION
+# Symlink: RELEASES/goclaw/latest → RELEASES/goclaw/$VERSION
 # --------------------------------------------------------------------
 
 latest-link:
-	@ln -sfn $(VERSION) $(RELEASES_DIR)/$(GOARCH)/latest
-	@echo "  $(GOARCH)/latest → $(VERSION)"
+	@ln -sfn $(VERSION) $(RELEASES_DIR)/latest
+	@echo "  latest → $(VERSION)"
 
 # --------------------------------------------------------------------
 # Cleanup
@@ -105,14 +67,8 @@ clean: ## Remove all versioned releases
 # Image management
 # --------------------------------------------------------------------
 
-image: ## Create initial goclaw image from alpine
-	podman rm goclaw-init 2>/dev/null || true
-	podman create --name goclaw-init alpine:3.23
-	podman commit goclaw-init localhost/goclaw:current
-	podman rm goclaw-init
-	@echo "Created: localhost/goclaw:current"
-
-pull-image: ## Pull alpine:3.23 and tag as :base and :current
+image: ## Build image from Dockerfile
 	podman pull alpine:3.23
-	podman tag alpine:3.23 localhost/goclaw:base
-	podman tag alpine:3.23 localhost/goclaw:current
+	podman build -t localhost/goclaw:current .
+	podman tag localhost/goclaw:current localhost/goclaw:base
+	@echo "Built: localhost/goclaw:current"

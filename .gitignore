@@ -16,7 +16,7 @@ pkg-helper
 
 # Environment
 .env*
-!.env.example
+!*.example
 
 app
 browser-poc

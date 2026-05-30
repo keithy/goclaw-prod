@@ -10,28 +10,39 @@
 
 services:
   goclaw:
-    command: ["/bin/goclaw"]
+    command: ["/bin/goclaw", "serve"]
     ports:
       - "${GOCLAW_PORT:-18790}:18790"
+
     env_file:
-      - path: ${GOCLAW_DIR:-../goclaw}/.env
+      - path: ../.env
         required: false
+
     environment:
-      - GOCLAW_HOST=0.0.0.0
-      - GOCLAW_PORT=18790
+      - GOCLAW_DATA_DIR=/app/data
       - GOCLAW_CONFIG=/app/data/config.json
+      - GOCLAW_SKILLS_DIR=/app/skills
+      - GOCLAW_WORKSPACE=/app/workspace
       - GOCLAW_GATEWAY_TOKEN=${GOCLAW_GATEWAY_TOKEN:?run ./prepare-env.sh or set GOCLAW_GATEWAY_TOKEN}
       - GOCLAW_ENCRYPTION_KEY=${GOCLAW_ENCRYPTION_KEY:-}
-      - GOCLAW_SKILLS_DIR=/app/data/skills
       - GOCLAW_TRACE_VERBOSE=${GOCLAW_TRACE_VERBOSE:-0}
+      - GOCLAW_HOST=${GOCLAW_HOST:-0.0.0.0}
+      - GOCLAW_PORT=${GOCLAW_PORT:-18790}
+
     volumes:
       - goclaw-data:/app/data
       - goclaw-workspace:/app/workspace
+      - goclaw-skills:/app/skills
+      # (this is defined for postgres service but somehow missing in the default)
+
     extra_hosts:
       - "host.docker.internal:host-gateway"
+
     security_opt:
       - no-new-privileges:true
+
     init: true
+
     cap_drop:
       - ALL
     cap_add:
@@ -55,6 +66,7 @@ volumes:
   sensible-tasks:
   goclaw-data:
   goclaw-workspace:
+  goclaw-skills:
 
 networks:
   net:
